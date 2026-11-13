@@ -2,41 +2,94 @@
 
 Spring Boot 3 / Java 17 REST service that searches GitHub repositories through the
 [GitHub REST API](https://docs.github.com/en/rest/search/search#search-repositories), stores (upserts) the
-results in PostgreSQL, and exposes a filterable endpoint over the stored data. No UI – test with Postman or curl.
+results in PostgreSQL, and exposes a filterable endpoint over the stored data. No UI – test with Swagger, Postman or curl.
 
-## Prerequisites
+## Live demo
+
+| | |
+|---|---|
+| **Live URL** | https://githubsearcher-zjvg.onrender.com |
+| **Swagger UI (API docs)** | https://githubsearcher-zjvg.onrender.com/swagger-ui.html |
+| **OpenAPI JSON** | https://githubsearcher-zjvg.onrender.com/v3/api-docs |
+
+> **Note:** the app is hosted on Render's free tier and goes to sleep after ~15 minutes without traffic.
+> The first request after that can take up to a minute while it wakes up – please wait and refresh.
+
+Quick try (live):
+```bash
+curl -X POST https://githubsearcher-zjvg.onrender.com/api/github/search \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"spring boot","language":"Java","sort":"stars"}'
+
+curl 'https://githubsearcher-zjvg.onrender.com/api/github/repositories?language=Java&minStars=100&sort=stars'
+```
+
+## Tech stack
+Java 17 · Spring Boot 3.2 · Spring Data JPA · PostgreSQL · Springdoc OpenAPI (Swagger) · JUnit 5 · Mockito · JaCoCo · Docker
+
+## Run locally
+
+### Prerequisites
 * JDK 17+
 * Maven 3.9+
-* Docker (only for the bundled PostgreSQL) – or any PostgreSQL 13+ instance
+* PostgreSQL 13+ (installed locally **or** via the bundled Docker Compose file)
 
-## Run
+### 1. Database
+Either install PostgreSQL locally and create an empty database:
+```sql
+CREATE DATABASE github_searcher;
+```
+(defaults expected: `localhost:5432`, user `postgres`, password `postgres`)
+
+or start it with Docker:
 ```bash
-# 1. start PostgreSQL (db: github_searcher, user/password: postgres/postgres)
 docker compose up -d
+```
+Tables are created automatically on first start (`docs/schema.sql` shows the equivalent DDL).
 
-# 2. (optional but recommended) GitHub token – raises search limit from 10 to 30 requests/minute
-export GITHUB_TOKEN=ghp_xxx          # Windows PowerShell: $env:GITHUB_TOKEN="ghp_xxx"
+### 2. GitHub token (optional)
+Without a token GitHub allows ~10 search requests/minute; with one, ~30.
+Set it as an environment variable (never commit it):
+```powershell
+$env:GITHUB_TOKEN="ghp_your_token_here"      # Windows PowerShell
+export GITHUB_TOKEN=ghp_your_token_here      # macOS / Linux
+```
+In IntelliJ: Run/Debug Configurations → Modify options → Environment variables.
 
-# 3. start the app on http://localhost:8082
+### 3. Start the app
+```bash
 mvn spring-boot:run
 ```
-Override the database with `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`. The table is created automatically
-(`docs/schema.sql` shows the equivalent DDL).
+The API runs at **http://localhost:8082**
 
-* Swagger UI: http://localhost:8082/swagger-ui.html  · OpenAPI JSON: http://localhost:8082/v3/api-docs
-* Postman: import `docs/GitHub-Repository-Searcher.postman_collection.json`
+* Swagger UI: http://localhost:8082/swagger-ui.html
+* Postman: import `docs/GitHub-Repository-Searcher.postman_collection.json` (set the `baseUrl` variable to the local or live URL)
+
+### Configuration (environment variables)
+| Variable | Default | Purpose |
+|---|---|---|
+| `DB_URL` | `jdbc:postgresql://localhost:5432/github_searcher` | JDBC URL (must start with `jdbc:`) |
+| `DB_USERNAME` | `postgres` | database user |
+| `DB_PASSWORD` | `postgres` | database password |
+| `GITHUB_TOKEN` | *(empty)* | optional GitHub token |
+| `PORT` | `8082` | HTTP port (set automatically by Render) |
+
+## Deployment
+* **App:** [Render](https://render.com) web service built from the `Dockerfile` (multi-stage Maven build → slim JRE image).
+* **Database:** [Neon](https://neon.tech) serverless PostgreSQL.
+* Credentials are supplied only as environment variables in Render (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `GITHUB_TOKEN`) – none are stored in the repository.
 
 ## Tests
 ```bash
-mvn test                       # unit + slice + integration tests (H2 in-memory, GitHub is mocked – no network needed)
-open target/site/jacoco/index.html   # coverage report
+mvn test                              # unit + slice + integration tests (H2 in-memory, GitHub is mocked – no network needed)
+open target/site/jacoco/index.html    # coverage report
 ```
 
 ## API
 
 ### 1. `POST /api/github/search` – fetch from GitHub and save
 ```bash
-curl -X POST localhost:8082/api/github/search -H 'Content-Type: application/json' \
+curl -X POST http://localhost:8082/api/github/search -H 'Content-Type: application/json' \
   -d '{"query":"spring boot","language":"Java","sort":"stars"}'
 ```
 | Field | Required | Notes |
@@ -64,7 +117,7 @@ No matches → `200` with `"message": "No repositories found for the given crite
 
 ### 2. `GET /api/github/repositories` – read stored data
 ```bash
-curl 'localhost:8082/api/github/repositories?language=Java&minStars=100&sort=stars'
+curl 'http://localhost:8082/api/github/repositories?language=Java&minStars=100&sort=stars'
 ```
 | Param | Notes |
 |---|---|
