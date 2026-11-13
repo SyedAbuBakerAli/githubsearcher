@@ -1,0 +1,149 @@
+{
+  "info": {
+    "name": "GitHub Repository Searcher",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "Search - spring boot / Java / stars",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/search"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"spring boot\",\n  \"language\": \"Java\",\n  \"sort\": \"stars\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Search - sort by forks, page 2",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/search"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"spring boot\",\n  \"language\": \"Java\",\n  \"sort\": \"forks\",\n  \"perPage\": 20,\n  \"page\": 2\n}"
+        }
+      }
+    },
+    {
+      "name": "Search - no matches",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/search"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"zzzzqqqqxxxxyyyy-not-a-repo-12345\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Search - invalid (blank query)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/search"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \" \"\n}"
+        }
+      }
+    },
+    {
+      "name": "Search - invalid sort",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/search"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"spring\",\n  \"sort\": \"watchers\"\n}"
+        }
+      }
+    },
+    {
+      "name": "List - all (default sort stars)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/repositories"
+        }
+      }
+    },
+    {
+      "name": "List - Java, minStars 100, sort stars",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/repositories?language=Java&minStars=100&sort=stars"
+        }
+      }
+    },
+    {
+      "name": "List - sort by updated, limit 10",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/repositories?sort=updated&limit=10"
+        }
+      }
+    },
+    {
+      "name": "List - invalid minStars",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/github/repositories?minStars=abc"
+        }
+      }
+    }
+  ]
+}
